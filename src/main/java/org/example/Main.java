@@ -1,17 +1,34 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+//import org.example.ui.DatabaseUI;
+import org.example.dao.*;
+import org.example.db.DatabaseConnection;
+import org.example.ui.MainFrame;
+
+import javax.swing.*;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        try {
+            DatabaseConnection.getConnection();
+            System.out.println("Успешое подключение к базе данных.");
+//            EmployeeDao employeeDao = new EmployeeDao();
+//            EmploymentContractDao employmentContractDao = new EmploymentContractDao();
+//            PositionDao positionDao = new PositionDao();
+//            DocumentDao documentDao = new DocumentDao();
+//            DepartmentDao departmentDao = new DepartmentDao();
+//            System.out.println(positionDao.getAllPositions());
+//            System.out.println(documentDao.getAllDocuments());
+//            System.out.println(departmentDao.getAllDepartments());
+//            System.out.println(employmentContractDao.getAllContracts());
+//            System.out.println(employeeDao.getAllEmployees());
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+            SwingUtilities.invokeLater(() -> {
+                new MainFrame();
+            });
+
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 }
