@@ -27,6 +27,8 @@ public class MainFrame extends JFrame {
         tabbedPane.addTab("Трудовые договоры", new EmploymentContractPanel());
         tabbedPane.addTab("Документы", new DocumentPanel());
 
+        tabbedPane.addTab("Отчеты", new ReportPanel());
+
         add(tabbedPane, BorderLayout.CENTER);
     }
 }

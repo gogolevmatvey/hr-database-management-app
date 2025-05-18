@@ -112,6 +112,33 @@ public class EmployeeDao {
             return 0;
         }
     }
+
+    public List<Employee> getEmployeesByDepartmentId(long departmentId) throws SQLException {
+        List<Employee> employees = new ArrayList<>();
+        String sql = "SELECT e.* FROM Employee e " +
+                "JOIN Employment_contract ec ON e.id = ec.employee_id " +
+                "WHERE ec.department_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, departmentId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Employee employee = new Employee();
+                    employee.setId(rs.getInt("id"));
+                    employee.setFull_name(rs.getString("full_name"));
+                    employee.setPhone_number(rs.getLong("phone_number"));
+                    employee.setEducation(rs.getString("education"));
+
+                    employees.add(employee);
+                }
+            }
+        }
+
+        return employees;
+    }
 }
 
 
