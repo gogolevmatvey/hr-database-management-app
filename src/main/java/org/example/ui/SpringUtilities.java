@@ -12,7 +12,7 @@ public class SpringUtilities {
         try {
             layout = (SpringLayout)parent.getLayout();
         } catch (ClassCastException exc) {
-            System.err.println("The first argument to makeCompactGrid must use SpringLayout.");
+            System.err.println("Первый аргумент метода makeCompactGrid должен использовать SpringLayout..");
             return;
         }
 
@@ -40,6 +40,7 @@ public class SpringUtilities {
         SpringLayout.Constraints lastRowCons = null;
         for (int i = 0; i < max; i++) {
             SpringLayout.Constraints cons = layout.getConstraints(parent.getComponent(i));
+            // Если компонент находится в начале строки
             if (i % cols == 0) {
                 lastRowCons = lastCons;
                 cons.setX(initialXSpring);
@@ -47,6 +48,7 @@ public class SpringUtilities {
                 cons.setX(Spring.sum(lastCons.getConstraint(SpringLayout.EAST), xPadSpring));
             }
 
+            // Если компонент находится в первой строке
             if (i / cols == 0) {
                 cons.setY(initialYSpring);
             } else {

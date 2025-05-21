@@ -4,6 +4,7 @@ import org.example.util.ExcelExporter;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
@@ -28,6 +29,7 @@ public abstract class BaseTablePanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
 
 //        loadData();
+        // асинхронная загрузка
         SwingUtilities.invokeLater(this::loadData);
     }
 
@@ -42,6 +44,9 @@ public abstract class BaseTablePanel extends JPanel {
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
 
         scrollPane = new JScrollPane(table);
     }

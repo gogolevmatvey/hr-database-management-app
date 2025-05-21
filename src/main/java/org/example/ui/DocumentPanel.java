@@ -24,7 +24,7 @@ public class DocumentPanel extends BaseTablePanel {
 
     @Override
     protected String[] getColumnNames() {
-        return new String[]{"ID", "Тип", "Серия", "Номер", "Дата", "Кем выдан", "ID сотрудника"};
+        return new String[]{"Тип", "Серия", "Номер", "Дата", "Кем выдан", "Сотрудник"};
     }
 
     @Override
@@ -34,14 +34,25 @@ public class DocumentPanel extends BaseTablePanel {
         try {
             List<Document> documents = documentDao.getAllDocuments();
             for (Document document : documents) {
+                // Получаем имя сотрудника
+                String employeeName = "";
+                try {
+                    Employee employee = employeeDao.getEmployeeById((int)document.getEmployee_id());
+                    if (employee != null) {
+                        employeeName = employee.getFull_name();
+                    }
+                } catch (SQLException ex) {
+                    employeeName = "Неизвестно";
+                }
+
                 Object[] row = {
-                        document.getId(),
+                        //document.getId(),
                         document.getType(),
                         document.getSerial(),
                         document.getNumber(),
                         document.getDate(),
                         document.getGiven_by(),
-                        document.getEmployee_id()
+                        employeeName
                 };
                 tableModel.addRow(row);
             }
@@ -49,6 +60,7 @@ public class DocumentPanel extends BaseTablePanel {
             showError("Ошибка при загрузке данных: " + e.getMessage());
         }
     }
+
 
     @Override
     protected void addAction(ActionEvent e) {
@@ -69,11 +81,10 @@ public class DocumentPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
-
         try {
-            Document document = documentDao.getDocumentById(id);
-            if (document != null) {
+            List<Document> documents = documentDao.getAllDocuments();
+            if (selectedRow < documents.size()) {
+                Document document = documents.get(selectedRow);
                 DocumentDialog dialog = new DocumentDialog(document);
                 if (dialog.showDialog()) {
                     documentDao.updateDocument(dialog.getDocument());
@@ -91,23 +102,30 @@ public class DocumentPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            List<Document> documents = documentDao.getAllDocuments();
+            if (selectedRow < documents.size()) {
+                long id = documents.get(selectedRow).getId();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Вы уверены, что хотите удалить этот документ?",
-                "Подтверждение удаления",
-                JOptionPane.YES_NO_OPTION
-        );
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Вы уверены, что хотите удалить этот документ?",
+                        "Подтверждение удаления",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                documentDao.deleteDocument(id);
-                loadData();
-                showInfo("Документ успешно удален");
-            } catch (SQLException ex) {
-                showError("Ошибка при удалении документа: " + ex.getMessage());
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        documentDao.deleteDocument(id);
+                        loadData();
+                        showInfo("Документ успешно удален");
+                    } catch (SQLException ex) {
+                        showError("Ошибка при удалении документа: " + ex.getMessage());
+                    }
+                }
             }
+        } catch (SQLException ex) {
+            showError("Ошибка при получении данных документа: " + ex.getMessage());
         }
     }
 

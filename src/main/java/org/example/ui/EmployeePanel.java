@@ -20,7 +20,7 @@ public class EmployeePanel extends BaseTablePanel {
 
     @Override
     protected String[] getColumnNames() {
-        return new String[]{"ID", "ФИО", "Телефон", "Образование"};
+        return new String[]{"ФИО", "Телефон", "Образование"};
     }
 
     @Override
@@ -31,7 +31,7 @@ public class EmployeePanel extends BaseTablePanel {
             List<Employee> employees = employeeDao.getAllEmployees();
             for (Employee employee : employees) {
                 Object[] row = {
-                        employee.getId(),
+                        //employee.getId(),
                         employee.getFull_name(),
                         employee.getPhone_number(),
                         employee.getEducation()
@@ -62,11 +62,10 @@ public class EmployeePanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
-
         try {
-            Employee employee = employeeDao.getEmployeeById(id);
-            if (employee != null) {
+            List<Employee> employees = employeeDao.getAllEmployees();
+            if (selectedRow < employees.size()) {
+                Employee employee = employees.get(selectedRow);
                 EmployeeDialog dialog = new EmployeeDialog(employee);
                 if (dialog.showDialog()) {
                     employeeDao.updateEmployee(dialog.getEmployee());
@@ -84,23 +83,30 @@ public class EmployeePanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
+        try {
+            List<Employee> employees = employeeDao.getAllEmployees();
+            if (selectedRow < employees.size()) {
+                int id = employees.get(selectedRow).getId();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Вы уверены, что хотите удалить этого сотрудника?",
-                "Подтверждение удаления",
-                JOptionPane.YES_NO_OPTION
-        );
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Вы уверены, что хотите удалить этого сотрудника?",
+                        "Подтверждение удаления",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                employeeDao.deleteEmployee(id);
-                loadData();
-                showInfo("Сотрудник успешно удален");
-            } catch (SQLException ex) {
-                showError("Ошибка при удалении сотрудника: " + ex.getMessage());
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        employeeDao.deleteEmployee(id);
+                        loadData();
+                        showInfo("Сотрудник успешно удален");
+                    } catch (SQLException ex) {
+                        showError("Ошибка при удалении сотрудника: " + ex.getMessage());
+                    }
+                }
             }
+        } catch (SQLException ex) {
+            showError("Ошибка при получении данных сотрудника: " + ex.getMessage());
         }
     }
 

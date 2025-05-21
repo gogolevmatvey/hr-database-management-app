@@ -19,7 +19,7 @@ public class EmployeesByDepartmentReport {
 
     public static void generateReport() {
         try {
-            // Create a JasperDesign object
+            // Создаем объект JasperDesign
             JasperDesign jasperDesign = new JasperDesign();
             jasperDesign.setName("EmployeesByDepartmentReport");
             jasperDesign.setPageWidth(595);
@@ -31,7 +31,7 @@ public class EmployeesByDepartmentReport {
             jasperDesign.setTopMargin(20);
             jasperDesign.setBottomMargin(20);
 
-            // Define fields
+            // Определяем поля
             JRDesignField departmentIdField = new JRDesignField();
             departmentIdField.setName("departmentId");
             departmentIdField.setValueClass(Long.class);
@@ -62,7 +62,7 @@ public class EmployeesByDepartmentReport {
             educationField.setValueClass(String.class);
             jasperDesign.addField(educationField);
 
-            // Create title band
+            // Создаем бэнд заголовок
             JRDesignBand titleBand = new JRDesignBand();
             titleBand.setHeight(50);
 
@@ -78,11 +78,11 @@ public class EmployeesByDepartmentReport {
             titleBand.addElement(titleText);
             jasperDesign.setTitle(titleBand);
 
-            // Create column header band
+            // Создаем бэнд заголовков столбцов
             JRDesignBand columnHeaderBand = new JRDesignBand();
             columnHeaderBand.setHeight(20);
 
-            // Employee ID header
+            // Заголовок ID сотрудника
             JRDesignStaticText idHeader = new JRDesignStaticText();
             idHeader.setX(0);
             idHeader.setY(0);
@@ -95,7 +95,6 @@ public class EmployeesByDepartmentReport {
             idHeader.setBold(true);
             columnHeaderBand.addElement(idHeader);
 
-            // Employee name header
             JRDesignStaticText nameHeader = new JRDesignStaticText();
             nameHeader.setX(50);
             nameHeader.setY(0);
@@ -108,7 +107,6 @@ public class EmployeesByDepartmentReport {
             nameHeader.setBold(true);
             columnHeaderBand.addElement(nameHeader);
 
-            // Phone header
             JRDesignStaticText phoneHeader = new JRDesignStaticText();
             phoneHeader.setX(250);
             phoneHeader.setY(0);
@@ -121,7 +119,6 @@ public class EmployeesByDepartmentReport {
             phoneHeader.setBold(true);
             columnHeaderBand.addElement(phoneHeader);
 
-            // Education header
             JRDesignStaticText educationHeader = new JRDesignStaticText();
             educationHeader.setX(400);
             educationHeader.setY(0);
@@ -134,7 +131,7 @@ public class EmployeesByDepartmentReport {
             educationHeader.setBold(true);
             columnHeaderBand.addElement(educationHeader);
 
-            // Create group for departments
+            // Создаем группу для отделов
             JRDesignGroup departmentGroup = new JRDesignGroup();
             departmentGroup.setName("DepartmentGroup");
 
@@ -142,7 +139,7 @@ public class EmployeesByDepartmentReport {
             groupExpression.setText("$F{departmentId}");
             departmentGroup.setExpression(groupExpression);
 
-            // Department group header
+            // Заголовок группы отделов
             JRDesignBand groupHeaderBand = new JRDesignBand();
             groupHeaderBand.setHeight(30);
 
@@ -161,7 +158,7 @@ public class EmployeesByDepartmentReport {
             groupHeaderBand.addElement(departmentNameField2);
             ((JRDesignSection)departmentGroup.getGroupHeaderSection()).addBand(groupHeaderBand);
 
-            // Department group footer
+            // Подвал группы отделов
             JRDesignBand groupFooterBand = new JRDesignBand();
             groupFooterBand.setHeight(20);
 
@@ -179,11 +176,11 @@ public class EmployeesByDepartmentReport {
             jasperDesign.addGroup(departmentGroup);
             jasperDesign.setColumnHeader(columnHeaderBand);
 
-            // Create detail band
+            // Создаем детальный бэнд
             JRDesignBand detailBand = new JRDesignBand();
             detailBand.setHeight(20);
 
-            // Employee ID field
+            // Поле ID сотрудника
             JRDesignTextField idField = new JRDesignTextField();
             idField.setX(0);
             idField.setY(0);
@@ -196,7 +193,6 @@ public class EmployeesByDepartmentReport {
             idField.setExpression(idExpression);
             detailBand.addElement(idField);
 
-            // Employee name field
             JRDesignTextField nameField = new JRDesignTextField();
             nameField.setX(50);
             nameField.setY(0);
@@ -208,7 +204,6 @@ public class EmployeesByDepartmentReport {
             nameField.setExpression(nameExpression);
             detailBand.addElement(nameField);
 
-            // Phone field
             JRDesignTextField phoneNumberField = new JRDesignTextField();
             phoneNumberField.setX(250);
             phoneNumberField.setY(0);
@@ -220,7 +215,6 @@ public class EmployeesByDepartmentReport {
             phoneNumberField.setExpression(phoneExpression);
             detailBand.addElement(phoneNumberField);
 
-            // Education field
             JRDesignTextField educationTextField = new JRDesignTextField();
             educationTextField.setX(400);
             educationTextField.setY(0);
@@ -232,20 +226,20 @@ public class EmployeesByDepartmentReport {
             educationTextField.setExpression(educationExpression);
             detailBand.addElement(educationTextField);
 
-            // Set the detail band to the design
+            // Добавляем детальный бэнд в дизайн
             ((JRDesignSection)jasperDesign.getDetailSection()).addBand(detailBand);
 
-            // Compile the report
+            // Компилируем отчет
             JasperReport jasperReport = JasperCompileManager.compileReport(jasperDesign);
 
-            // Prepare data
+            // Подготавливаем данные
             List<Map<String, Object>> dataList = prepareReportData();
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(dataList);
 
-            // Fill the report
+            // Заполняем отчет
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, new HashMap<>(), dataSource);
 
-            // Show the report
+            // Показываем отчет
             JasperViewer.viewReport(jasperPrint, false);
 
         } catch (Exception e) {

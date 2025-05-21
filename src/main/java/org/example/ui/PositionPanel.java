@@ -17,7 +17,7 @@ public class PositionPanel extends BaseTablePanel {
 
     @Override
     protected String[] getColumnNames() {
-        return new String[]{"ID", "Название", "Описание", "Оплата за день"};
+        return new String[]{"Название", "Описание", "Оплата за день"};
     }
 
     @Override
@@ -28,7 +28,7 @@ public class PositionPanel extends BaseTablePanel {
             List<Position> positions = positionDao.getAllPositions();
             for (Position position : positions) {
                 Object[] row = {
-                        position.getId(),
+                        //position.getId(),
                         position.getName(),
                         position.getDescription(),
                         position.getDay_payment()
@@ -59,11 +59,10 @@ public class PositionPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
-
         try {
-            Position position = positionDao.getPositionById(id);
-            if (position != null) {
+            List<Position> positions = positionDao.getAllPositions();
+            if (selectedRow < positions.size()) {
+                Position position = positions.get(selectedRow);
                 PositionDialog dialog = new PositionDialog(position);
                 if (dialog.showDialog()) {
                     positionDao.updatePosition(dialog.getPosition());
@@ -81,23 +80,30 @@ public class PositionPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            List<Position> positions = positionDao.getAllPositions();
+            if (selectedRow < positions.size()) {
+                long id = positions.get(selectedRow).getId();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Вы уверены, что хотите удалить эту должность?",
-                "Подтверждение удаления",
-                JOptionPane.YES_NO_OPTION
-        );
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Вы уверены, что хотите удалить эту должность?",
+                        "Подтверждение удаления",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                positionDao.deletePosition(id);
-                loadData();
-                showInfo("Должность успешно удалена");
-            } catch (SQLException ex) {
-                showError("Ошибка при удалении должности: " + ex.getMessage());
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        positionDao.deletePosition(id);
+                        loadData();
+                        showInfo("Должность успешно удалена");
+                    } catch (SQLException ex) {
+                        showError("Ошибка при удалении должности: " + ex.getMessage());
+                    }
+                }
             }
+        } catch (SQLException ex) {
+            showError("Ошибка при получении данных должности: " + ex.getMessage());
         }
     }
 

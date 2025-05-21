@@ -20,7 +20,7 @@ public class ExcelExporter {
         if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
 
-            // Add .xlsx extension if not present
+            // Добавляем расширение .xlsx, если оно отсутствует
             if (!file.getName().toLowerCase().endsWith(".xlsx")) {
                 file = new File(file.getAbsolutePath() + ".xlsx");
             }
@@ -28,25 +28,25 @@ public class ExcelExporter {
             try (Workbook workbook = new XSSFWorkbook()) {
                 Sheet sheet = workbook.createSheet(title);
 
-                // Create header row
+                // Создаем строку заголовка
                 Row headerRow = sheet.createRow(0);
                 TableModel model = table.getModel();
 
-                // Create header cell style
+                /// Создаем стиль ячейки заголовка
                 CellStyle headerStyle = workbook.createCellStyle();
                 Font headerFont = workbook.createFont();
                 headerFont.setBold(true);
                 headerStyle.setFont(headerFont);
                 headerStyle.setAlignment(HorizontalAlignment.CENTER);
 
-                // Fill header cells
+                // Заполняем ячейки заголовка
                 for (int i = 0; i < model.getColumnCount(); i++) {
                     Cell cell = headerRow.createCell(i);
                     cell.setCellValue(model.getColumnName(i));
                     cell.setCellStyle(headerStyle);
                 }
 
-                // Fill data rows
+                // Заполняем строки данными
                 for (int i = 0; i < model.getRowCount(); i++) {
                     Row row = sheet.createRow(i + 1);
                     for (int j = 0; j < model.getColumnCount(); j++) {
@@ -58,12 +58,12 @@ public class ExcelExporter {
                     }
                 }
 
-                // Auto-size columns
+                // Автоматически настраиваем ширину столбцов
                 for (int i = 0; i < model.getColumnCount(); i++) {
                     sheet.autoSizeColumn(i);
                 }
 
-                // Write to file
+                // Записываем в файл
                 try (FileOutputStream outputStream = new FileOutputStream(file)) {
                     workbook.write(outputStream);
                 }

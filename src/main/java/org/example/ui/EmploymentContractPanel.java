@@ -31,7 +31,7 @@ public class EmploymentContractPanel extends BaseTablePanel {
 
     @Override
     protected String[] getColumnNames() {
-        return new String[]{"ID", "Номер", "Тип", "Дата создания", "Дата заключения", "Сотрудник", "Отдел", "Должность"};
+        return new String[]{"Номер", "Тип", "Дата создания", "Дата заключения", "Сотрудник", "Отдел", "Должность"};
     }
 
     @Override
@@ -47,7 +47,7 @@ public class EmploymentContractPanel extends BaseTablePanel {
                 String positionName = getPositionName(contract.getPosition_id());
 
                 Object[] row = {
-                        contract.getId(),
+                        //contract.getId(),
                         contract.getNumber(),
                         contract.getType(),
                         contract.getCreation_date(),
@@ -109,11 +109,10 @@ public class EmploymentContractPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
-
         try {
-            EmploymentContract contract = contractDao.getContractById(id);
-            if (contract != null) {
+            List<EmploymentContract> contracts = contractDao.getAllContracts();
+            if (selectedRow < contracts.size()) {
+                EmploymentContract contract = contracts.get(selectedRow);
                 ContractDialog dialog = new ContractDialog(contract);
                 if (dialog.showDialog()) {
                     contractDao.updateContract(dialog.getContract());
@@ -131,23 +130,30 @@ public class EmploymentContractPanel extends BaseTablePanel {
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            List<EmploymentContract> contracts = contractDao.getAllContracts();
+            if (selectedRow < contracts.size()) {
+                long id = contracts.get(selectedRow).getId();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Вы уверены, что хотите удалить этот трудовой договор?",
-                "Подтверждение удаления",
-                JOptionPane.YES_NO_OPTION
-        );
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Вы уверены, что хотите удалить этот трудовой договор?",
+                        "Подтверждение удаления",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                contractDao.deleteContract(id);
-                loadData();
-                showInfo("Трудовой договор успешно удален");
-            } catch (SQLException ex) {
-                showError("Ошибка при удалении трудового договора: " + ex.getMessage());
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        contractDao.deleteContract(id);
+                        loadData();
+                        showInfo("Трудовой договор успешно удален");
+                    } catch (SQLException ex) {
+                        showError("Ошибка при удалении трудового договора: " + ex.getMessage());
+                    }
+                }
             }
+        } catch (SQLException ex) {
+            showError("Ошибка при получении данных трудового договора: " + ex.getMessage());
         }
     }
 

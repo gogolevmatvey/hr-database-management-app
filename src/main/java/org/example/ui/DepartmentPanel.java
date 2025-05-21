@@ -17,7 +17,7 @@ public class DepartmentPanel extends BaseTablePanel{
 
     @Override
     protected String[] getColumnNames() {
-        return new String[]{"ID", "Название отдела"};
+        return new String[]{"Название отдела"};
     }
 
     @Override
@@ -28,7 +28,7 @@ public class DepartmentPanel extends BaseTablePanel{
             List<Department> departments = departmentDao.getAllDepartments();
             for (Department department : departments) {
                 Object[] row = {
-                        department.getId(),
+                        //department.getId(),
                         department.getName()
                 };
                 tableModel.addRow(row);
@@ -57,11 +57,11 @@ public class DepartmentPanel extends BaseTablePanel{
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
-
         try {
-            Department department = departmentDao.getDepartmentById(id);
-            if (department != null) {
+            // Получаем список всех отделов
+            List<Department> departments = departmentDao.getAllDepartments();
+            if (selectedRow < departments.size()) {
+                Department department = departments.get(selectedRow);
                 DepartmentDialog dialog = new DepartmentDialog(department);
                 if (dialog.showDialog()) {
                     departmentDao.updateDepartment(dialog.getDepartment());
@@ -79,23 +79,31 @@ public class DepartmentPanel extends BaseTablePanel{
         int selectedRow = getSelectedRowId();
         if (selectedRow == -1) return;
 
-        long id = (long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            // Получаем список всех отделов
+            List<Department> departments = departmentDao.getAllDepartments();
+            if (selectedRow < departments.size()) {
+                long id = departments.get(selectedRow).getId();
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Вы уверены, что хотите удалить этот отдел?",
-                "Подтверждение удаления",
-                JOptionPane.YES_NO_OPTION
-        );
+                int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Вы уверены, что хотите удалить этот отдел?",
+                        "Подтверждение удаления",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                departmentDao.deleteDepartment(id);
-                loadData();
-                showInfo("Отдел успешно удален");
-            } catch (SQLException ex) {
-                showError("Ошибка при удалении отдела: " + ex.getMessage());
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        departmentDao.deleteDepartment(id);
+                        loadData();
+                        showInfo("Отдел успешно удален");
+                    } catch (SQLException ex) {
+                        showError("Ошибка при удалении отдела: " + ex.getMessage());
+                    }
+                }
             }
+        } catch (SQLException ex) {
+            showError("Ошибка при получении данных отдела: " + ex.getMessage());
         }
     }
 
