@@ -1,0 +1,43 @@
+CREATE TABLE Employee (
+    ID BIGINT PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    phone_number BIGINT,
+    education VARCHAR(255)
+);
+
+CREATE TABLE Department (
+    ID BIGINT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Position (
+    ID BIGINT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    day_payment INT
+);
+
+CREATE TABLE Employment_contract (
+    ID BIGINT PRIMARY KEY,
+    number INT NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    creation_date DATE NOT NULL,
+    date_of_conclusion DATE,
+    employee_id BIGINT,
+    department_id BIGINT NOT NULL,
+    position_id BIGINT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES Employee(ID),
+    FOREIGN KEY (department_id) REFERENCES Department(ID),
+    FOREIGN KEY (position_id) REFERENCES Position(ID)
+);
+
+CREATE TABLE Document (
+    ID BIGINT PRIMARY KEY,
+    type INT NOT NULL,
+    serial INT,
+    number BIGINT NOT NULL,
+    date DATE,
+    given_by VARCHAR(255),
+    employee_id BIGINT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES Employee(ID)
+);

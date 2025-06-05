@@ -1,0 +1,255 @@
+CREATE PROCEDURE HireEmployee
+    @full_name VARCHAR(255),
+    @phone_number BIGINT,
+    @education VARCHAR(255),
+    @passport_serial INT,
+    @passport_number INT,
+    @passport_date DATE,
+    @passport_given_by VARCHAR(255),
+    @inn_number INT,
+    @inn_date DATE,
+    @inn_given_by VARCHAR(255),
+    @snils_number BIGINT,
+    @snils_date DATE,
+    @snils_given_by VARCHAR(255),
+    @contract_number INT,
+    @contract_type VARCHAR(255),
+    @contract_creation_date DATE,
+    @department_id BIGINT,
+    @position_id BIGINT,
+    @start_date DATE = NULL
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        DECLARE @new_employee_id BIGINT;
+        
+        SELECT @new_employee_id = ISNULL(MAX(ID), 0) + 1 FROM Employee;
+        
+        INSERT INTO Employee (ID, full_name, phone_number, education)
+        VALUES (@new_employee_id, @full_name, @phone_number, @education);
+        
+        DECLARE @new_document_id BIGINT;
+        
+        SELECT @new_document_id = ISNULL(MAX(ID), 0) + 1 FROM Document;
+        INSERT INTO Document (ID, type, serial, number, date, given_by, employee_id)
+        VALUES (@new_document_id, 1, @passport_serial, @passport_number, @passport_date, @passport_given_by, @new_employee_id);
+        
+        SELECT @new_document_id = ISNULL(MAX(ID), 0) + 1 FROM Document;
+        INSERT INTO Document (ID, type, number, date, given_by, employee_id)
+        VALUES (@new_document_id, 2, @inn_number, @inn_date, @inn_given_by, @new_employee_id);
+        
+        SELECT @new_document_id = ISNULL(MAX(ID), 0) + 1 FROM Document;
+        INSERT INTO Document (ID, type, number, date, given_by, employee_id)
+        VALUES (@new_document_id, 3, @snils_number, @snils_date, @snils_given_by, @new_employee_id);
+
+        DECLARE @new_contract_id BIGINT;
+        
+        IF @start_date IS NULL
+            SET @start_date = GETDATE();
+        
+        SELECT @new_contract_id = ISNULL(MAX(ID), 0) + 1 FROM Employment_contract;
+        INSERT INTO Employment_contract (ID, number, type, creation_date, date_of_conclusion, employee_id, department_id, position_id)
+        VALUES (@new_contract_id, @contract_number, @contract_type, @contract_creation_date, @start_date, @new_employee_id, @department_id, @position_id);
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+            ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+
+
+CREATE PROCEDURE DeleteEmployee
+    @employee_id BIGINT
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        IF NOT EXISTS (SELECT 1 FROM Employee WHERE ID = @employee_id)
+        BEGIN
+            RAISERROR('Сотрудник с ID %d не найден', 16, 1, @employee_id);
+            RETURN;
+        END
+        
+        DELETE FROM Document WHERE employee_id = @employee_id;
+        
+        DELETE FROM Employment_contract WHERE employee_id = @employee_id;
+        
+        DELETE FROM Employee WHERE ID = @employee_id;
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+
+
+CREATE PROCEDURE CreateNewDepartment
+    @department_name VARCHAR(255)
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        IF EXISTS (SELECT 1 FROM Department WHERE name = @department_name)
+        BEGIN
+            RAISERROR('Отдел с названием "%s" уже существует', 16, 1, @department_name);
+            RETURN;
+        END
+        
+        DECLARE @new_department_id BIGINT;
+        SELECT @new_department_id = ISNULL(MAX(ID), 0) + 1 FROM Department;
+        
+        INSERT INTO Department (ID, name)
+        VALUES (@new_department_id, @department_name);
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+
+
+CREATE PROCEDURE UpdateEmployee
+    @employee_id BIGINT,
+    @full_name VARCHAR(255) = NULL,
+    @phone_number BIGINT = NULL,
+    @education VARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        IF NOT EXISTS (SELECT 1 FROM Employee WHERE ID = @employee_id)
+        BEGIN
+            RAISERROR('Сотрудник с ID %d не найден', 16, 1, @employee_id);
+            RETURN;
+        END
+        
+        UPDATE Employee
+        SET 
+            full_name = ISNULL(@full_name, full_name),
+            phone_number = ISNULL(@phone_number, phone_number),
+            education = ISNULL(@education, education)
+        WHERE ID = @employee_id;
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+
+
+CREATE PROCEDURE TransferEmployeeToDepartment
+    @employee_id BIGINT,
+    @new_department_id BIGINT,
+    @new_position_id BIGINT = NULL
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+        
+        IF NOT EXISTS (SELECT 1 FROM Employee WHERE ID = @employee_id)
+        BEGIN
+            RAISERROR('Сотрудник с ID %d не найден', 16, 1, @employee_id);
+            RETURN;
+        END
+        
+        IF NOT EXISTS (SELECT 1 FROM Department WHERE ID = @new_department_id)
+        BEGIN
+            RAISERROR('Отдел с ID %d не найден', 16, 1, @new_department_id);
+            RETURN;
+        END
+        
+        IF @new_position_id IS NOT NULL 
+            AND NOT EXISTS (SELECT 1 FROM Position WHERE ID = @new_position_id)
+        BEGIN
+            RAISERROR('Должность с ID %d не найдена', 16, 1, @new_position_id);
+            RETURN;
+        END
+        
+        IF @new_position_id IS NULL
+        BEGIN
+            SELECT @new_position_id = position_id 
+            FROM Employment_contract 
+            WHERE employee_id = @employee_id
+        END
+        
+        DELETE FROM Employment_contract 
+        WHERE employee_id = @employee_id;
+        
+        DECLARE @new_contract_id BIGINT;
+        SELECT @new_contract_id = ISNULL(MAX(ID), 0) + 1 FROM Employment_contract;
+        
+        DECLARE @contract_number INT;
+        SELECT @contract_number = ISNULL(MAX(number), 0) + 1 FROM Employment_contract;
+        
+        INSERT INTO Employment_contract (ID, number, type, creation_date, date_of_conclusion, employee_id, department_id, position_id)
+        VALUES (@new_contract_id, @contract_number, 'долгосрочный', GETDATE(), GETDATE(), @employee_id, @new_department_id, @new_position_id);
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+    END CATCH;
+END;
+
+
+CREATE PROCEDURE GetDepartmentEmployees
+    @department_id BIGINT
+AS
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Department WHERE ID = @department_id)
+    BEGIN
+        RAISERROR('Отдел с ID %d не найден', 16, 1, @department_id);
+        RETURN;
+    END
+
+    SELECT 
+        e.ID AS EmployeeID,
+        e.full_name AS FullName,
+        e.phone_number AS PhoneNumber,
+        e.education AS Education,
+        p.name AS PositionName,
+        p.day_payment AS DailySalary,
+        ec.date_of_conclusion AS HireDate,
+        d.name AS DepartmentName
+    FROM 
+        Employee e
+        JOIN Employment_contract ec ON e.ID = ec.employee_id
+        JOIN Position p ON ec.position_id = p.ID
+        JOIN Department d ON ec.department_id = d.ID
+    WHERE 
+        ec.department_id = @department_id AND ec.employee_id IS NOT NULL    
+    ORDER BY 
+        e.full_name;
+END;
+
+
+CREATE PROCEDURE GetVacancies
+AS
+BEGIN
+    SELECT 
+        d.ID AS DepartmentID,
+        d.name AS DepartmentName,
+        p.ID AS PositionID,
+        p.name AS PositionName,
+        p.description AS PositionDescription,
+        p.day_payment AS DailySalary,
+        ec.creation_date AS VacancyCreatedDate,
+        ec.type AS ContractType
+    FROM 
+        Employment_contract ec
+        JOIN Department d ON ec.department_id = d.ID
+        JOIN Position p ON ec.position_id = p.ID
+    WHERE 
+        ec.employee_id IS NULL AND ec.date_of_conclusion IS NULL 
+    ORDER BY 
+        d.name, p.name;
+END;
